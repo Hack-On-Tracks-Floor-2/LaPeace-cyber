@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AEGIS — AI chatbot security testing dashboard. Run adversarial tests, review vulnerability findings, and apply guardrail fixes.">
+  <title>AEGIS — Security Testing Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══ Sidebar ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>AEGIS</h1>
+      <div class="tagline">AI Security Testing</div>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li><a href="#" data-page="page-overview" class="active"><span class="nav-icon">◈</span> Overview</a></li>
+      <li><a href="#" data-page="page-tests"><span class="nav-icon">▶</span> Run Tests</a></li>
+      <li><a href="#" data-page="page-findings"><span class="nav-icon">⚑</span> Findings</a></li>
+      <li><a href="#" data-page="page-guardrails"><span class="nav-icon">⛊</span> Guardrails</a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>System Online
+    </div>
+  </aside>
+
+
+  <!-- ═══ Main Content ═══ -->
+  <main class="main">
+
+    <!-- ─── Overview ─── -->
+    <section id="page-overview" class="page active">
+      <div class="page-header">
+        <h2>Overview</h2>
+        <div class="subtitle">Security posture summary for active targets</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Tests Run</div>
+          <div class="stat-value blue">342</div>
+          <div class="stat-detail">across 4 targets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vulnerabilities Found</div>
+          <div class="stat-value red">18</div>
+          <div class="stat-detail">7 critical · 6 high</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fixes Verified</div>
+          <div class="stat-value green">11</div>
+          <div class="stat-detail">61% remediation rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Open Issues</div>
+          <div class="stat-value yellow">7</div>
+          <div class="stat-detail">4 critical / high</div>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="terminal mb-12">
+        <div class="terminal-header">
+          <span class="dot" style="background: var(--green);"></span>
+          Activity Log
+        </div>
+        <div class="terminal-body" id="activity-log-body"></div>
+      </div>
+
+      <!-- Recent Findings -->
+      <div class="panel">
+        <div class="panel-header">Recent Findings</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Severity</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recent-findings-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- ─── Run Tests ─── -->
+    <section id="page-tests" class="page">
+      <div class="page-header">
+        <h2>Run Tests</h2>
+        <div class="subtitle">Configure and execute adversarial test scans against a chatbot target</div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="panel">
+            <div class="panel-header">Test Configuration</div>
+            <div class="panel-body">
+
+              <div class="form-group">
+                <label class="form-label" for="target-select">Target Chatbot</label>
+                <select class="form-select" id="target-select">
+                  <option>support-bot-prod (GPT-4o)</option>
+                  <option>onboarding-bot-v2 (GPT-4o)</option>
+                  <option>sales-assistant (Claude 3.5)</option>
+                  <option>internal-kb-bot (Gemini Pro)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Attack Vectors</label>
+                <div class="checkbox-group" id="attack-checkboxes"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="iterations-input">Iterations per Vector</label>
+                <input class="form-input" id="iterations-input" type="number" value="5" min="1" max="50" style="width: 100px;">
+              </div>
+
+              <div class="flex-between mt-12">
+                <button class="btn btn-primary" id="run-test-btn" onclick="startTestRun()">▶ Run Tests</button>
+                <span class="badge badge-pending" id="test-status">Idle</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="terminal" style="height: 100%;">
+            <div class="terminal-header">
+              <span class="dot" style="background: var(--green);"></span>
+              Test Output
+            </div>
+            <div class="terminal-body" id="test-log-body" style="max-height: 340px;">
+              <div class="log-line"><span class="log-time">[--:--:--]</span> <span class="log-info">Waiting for test run...</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── Findings ─── -->
+    <section id="page-findings" class="page">
+      <div class="page-header">
+        <h2>Findings</h2>
+        <div class="subtitle">Detected vulnerabilities across all scanned targets</div>
+      </div>
+
+      <div class="stats-row" style="margin-bottom: 16px;">
+        <div class="stat-card">
+          <div class="stat-label">Critical</div>
+          <div class="stat-value red" id="count-critical">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">High</div>
+          <div class="stat-value" style="color: var(--orange);" id="count-high">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Medium</div>
+          <div class="stat-value yellow" id="count-medium">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Low</div>
+          <div class="stat-value blue" id="count-low">-</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>All Findings</span>
+          <span style="font-size: 10px; text-transform: none; font-weight: 400; letter-spacing: 0;">7 total</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Severity</th>
+              <th>Description</th>
+              <th>Detected</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="findings-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- ─── Guardrails ─── -->
+    <section id="page-guardrails" class="page">
+      <div class="page-header">
+        <h2>Guardrails</h2>
+        <div class="subtitle">Proposed fixes with before-and-after test evidence</div>
+      </div>
+
+      <div id="guardrails-list"></div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
